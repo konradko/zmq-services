@@ -11,6 +11,7 @@ class Resource(object):
 
 class Service(object):
     required_attributes = ['name', 'resource']
+    running = False
 
     def __init__(self, *args, **kwargs):
         for attr in self.required_attributes:
