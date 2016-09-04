@@ -1,6 +1,7 @@
 from multiprocessing import Process
 
-from zmqservices import pubsub, logger
+from zmqservices import pubsub, clientserver, logger
+from zmqservices.utils import RequiredAttributesMixin
 
 
 class Resource(object):
@@ -9,21 +10,9 @@ class Resource(object):
         raise NotImplementedError()
 
 
-class Service(object):
+class Service(RequiredAttributesMixin):
     required_attributes = ['name', 'resource']
     running = False
-
-    def __init__(self, *args, **kwargs):
-        for attr in self.required_attributes:
-            if kwargs.get(attr):
-                setattr(self, attr, kwargs.pop(attr))
-
-        if not all((getattr(self, attr) for attr in self.required_attributes)):
-            raise NotImplementedError(
-                "Not all required attributes set: {}".format(
-                    ", ".join(self.required_attributes)
-                )
-            )
 
     def start(self):
         if self.running:
@@ -69,4 +58,35 @@ class PublisherService(Service):
 
     def run_resource(self):
         resource_instance = self.resource(publisher=self.get_publisher())
+        resource_instance.run()
+
+
+class ServerResource(Resource):
+
+    def __init__(self, server, *args, **kwargs):
+        self.server = server
+
+
+class ServerService(Service):
+    name = 'server'
+    resource = ServerResource
+    server = clientserver.Server
+    client = clientserver.Client
+
+    def __init__(self, *args, **kwargs):
+        self.required_attributes += ['address', 'port']
+        super(ServerService, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def get_client(cls, server_address=None):
+        return cls.client(
+            servers=(server_address or cls.address, ),
+        )
+
+    @classmethod
+    def get_server(cls):
+        return cls.server(port=cls.port)
+
+    def run_resource(self):
+        resource_instance = self.resource(server=self.get_server())
         resource_instance.run()

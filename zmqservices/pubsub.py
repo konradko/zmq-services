@@ -1,29 +1,12 @@
 import zmq
 
 from zmqservices import messages, logger
-
-
-class Socket(object):
-
-    @staticmethod
-    def get_socket(socket_type):
-        context = zmq.Context()
-        return context.socket(socket_type)
+from zmqservices.utils import Socket, LastMessageMixin
 
 
 class Publisher(Socket):
     """ZMQ publisher"""
-
-    def __init__(self, port):
-        """Init publisher
-
-        Args:
-            port (int): Port to bind on
-        """
-        self.socket = self.get_socket(zmq.PUB)
-        self.port = port
-        self.socket.bind(port)
-        logger.info("Started a publisher on port '{}'".format(self.port))
+    socket_type = zmq.PUB
 
     def send(self, message):
         """Publish topic data
@@ -40,15 +23,16 @@ class Publisher(Socket):
 
 class Subscriber(Socket):
     """ZMQ subscriber"""
+    socket_type = zmq.SUB
 
-    def __init__(self, publishers, topics):
+    def __init__(self, publishers, topics, *args, **kwargs):
         """Init subscriber
 
         Args:
             publishers ([str]): List of "<host>:<port>" publisher addresses
             topics ([str]): List of topics to subscribe to
         """
-        self.socket = self.get_socket(zmq.SUB)
+        super(Subscriber, self).__init__(*args, **kwargs)
 
         for publisher in publishers:
             self.connect(publisher)
@@ -104,16 +88,6 @@ class MessageForwarder(Subscriber):
         """
         logger.debug("Forwarding message '{}'".format(message.uuid))
         self.publisher.send(message)
-
-
-class LastMessageMixin(object):
-
-    @staticmethod
-    def get_socket(socket_type):
-        context = zmq.Context()
-        socket = context.socket(socket_type)
-        socket.setsockopt(zmq.CONFLATE, 1)
-        return socket
 
 
 class LastMessagePublisher(LastMessageMixin, Publisher):
