@@ -1,12 +1,12 @@
 from multiprocessing import Process
 
-from zmqservices import pubsub, clientserver, logger
+from zmqservices import messages, pubsub, clientserver, logger
 from zmqservices.utils import RequiredAttributesMixin
 
 
 class Resource(object):
 
-    def run():
+    def run(self):
         raise NotImplementedError()
 
 
@@ -66,6 +66,15 @@ class ServerResource(Resource):
     def __init__(self, server, *args, **kwargs):
         self.server = server
 
+    def process_request(self, request):
+        raise NotImplementedError()
+
+    def run(self):
+        while True:
+            request = self.server.receive()
+            response = self.process_request(request)
+            self.server.respond(response)
+
 
 class ServerService(Service):
     name = 'server'
@@ -90,3 +99,36 @@ class ServerService(Service):
     def run_resource(self):
         resource_instance = self.resource(server=self.get_server())
         resource_instance.run()
+
+
+class JsonrpcServerResource(ServerResource):
+    # {<method name>: <params validator>}
+    allowed_methods = {}
+
+    def parse_jrpc(self, request):
+        method = request.data.get('method')
+        params = request.data.get('params', {})
+        error = None
+
+        if method in self.methods:
+            if not self.methods[method](**params):
+                error = 'Invalid params'
+        else:
+            error = 'Invalid method'
+
+        return method, params, error
+
+    def process_request(self, request):
+        method, params, error = self.parse_jrpc(request)
+
+        if not error:
+            response_data = getattr(self, method)(**params)
+        else:
+            response_data = error
+
+        return messages.JSON(data=response_data)
+
+
+class JsonrpcServer(ServerService):
+    name = 'jsonrpc_server'
+    resource = JsonrpcServerResource

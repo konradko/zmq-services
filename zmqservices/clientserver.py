@@ -13,20 +13,15 @@ class Server(Socket):
         super(Server, self).__init__(*args, **kwargs)
         logger.info("Started a server on port '{}'".format(self.port))
 
-    def respond(self, request):
+    def respond(self, response):
         """Respond to a request
 
         Args:
             request (Message): Request to respond to
         """
-        response = self.process_request(request)
         logger.debug("Sending response '{}'".format(response.uuid))
         self.socket.send(response.serialize())
         logger.debug("Response '{}' sent".format(response.uuid))
-
-    def process_request(self, request):
-        logger.debug("Processing a request...")
-        return messages.parse(raw_message=request)
 
     def receive(self):
         """Returns a single message from the publishers
@@ -36,7 +31,7 @@ class Server(Socket):
         """
         logger.debug("Waiting for requests...")
         request = self.socket.recv()
-        self.respond(request)
+        return messages.parse(raw_message=request)
 
 
 class Client(Socket):
