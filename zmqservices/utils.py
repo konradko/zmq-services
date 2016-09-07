@@ -18,17 +18,26 @@ class RequiredAttributesMixin(object):
 
 
 class Socket(RequiredAttributesMixin):
-    required_attributes = ['socket_type', 'port']
+    required_attributes = ['socket_type']
 
     def __init__(self, *args, **kwargs):
         super(Socket, self).__init__(*args, **kwargs)
         self.socket = self.get_socket(self.socket_type)
-        self.socket.bind(self.port)
 
     @staticmethod
     def get_socket(socket_type):
         context = zmq.Context()
         return context.socket(socket_type)
+
+
+class BoundSocket(Socket):
+
+    def __init__(self, *args, **kwargs):
+        self.required_attributes.append('port')
+
+        super(BoundSocket, self).__init__(*args, **kwargs)
+
+        self.socket.bind(self.port)
 
 
 class LastMessageMixin(object):

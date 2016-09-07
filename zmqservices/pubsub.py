@@ -1,10 +1,10 @@
 import zmq
 
 from zmqservices import messages, logger
-from zmqservices.utils import Socket, LastMessageMixin
+from zmqservices.utils import Socket, BoundSocket, LastMessageMixin
 
 
-class Publisher(Socket):
+class Publisher(BoundSocket):
     """ZMQ publisher"""
     socket_type = zmq.PUB
 

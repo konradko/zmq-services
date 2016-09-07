@@ -1,10 +1,10 @@
 import zmq
 
 from zmqservices import messages, logger
-from zmqservices.utils import Socket
+from zmqservices.utils import Socket, BoundSocket
 
 
-class Server(Socket):
+class Server(BoundSocket):
     """ZMQ server"""
     socket_type = zmq.REP
     port = None
