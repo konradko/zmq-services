@@ -103,15 +103,16 @@ class ServerService(Service):
 
 class JsonrpcServerResource(ServerResource):
     # {<method name>: <params validator>}
-    allowed_methods = {}
+    endpoints = {}
 
     def parse_jrpc(self, request):
         method = request.data.get('method')
         params = request.data.get('params', {})
         error = None
 
-        if method in self.methods:
-            if not self.methods[method](**params):
+        if method in self.endpoints:
+            # validate params
+            if not self.endpoints[method](**params):
                 error = 'Invalid params'
         else:
             error = 'Invalid method'
