@@ -11,7 +11,7 @@ class Resource(object):
 
 
 class Service(RequiredAttributesMixin):
-    required_attributes = ['name', 'resource']
+    required_attributes = ('name', 'resource')
     running = False
 
     def start(self):
@@ -42,7 +42,9 @@ class PublisherService(Service):
     subscriber = pubsub.Subscriber
 
     def __init__(self, *args, **kwargs):
-        self.required_attributes += ['address', 'port']
+        self.required_attributes = self.required_attributes + (
+            'address', 'port'
+        )
         super(PublisherService, self).__init__(*args, **kwargs)
 
     @classmethod
@@ -83,7 +85,9 @@ class ServerService(Service):
     client = clientserver.Client
 
     def __init__(self, *args, **kwargs):
-        self.required_attributes += ['address', 'port']
+        self.required_attributes = self.required_attributes + (
+            'address', 'port'
+        )
         super(ServerService, self).__init__(*args, **kwargs)
 
     @classmethod

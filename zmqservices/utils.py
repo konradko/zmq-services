@@ -2,7 +2,7 @@ import zmq
 
 
 class RequiredAttributesMixin(object):
-    required_attributes = []
+    required_attributes = ()
 
     def __init__(self, *args, **kwargs):
         for attr in self.required_attributes:
@@ -18,9 +18,10 @@ class RequiredAttributesMixin(object):
 
 
 class Socket(RequiredAttributesMixin):
-    required_attributes = ['socket_type']
+    required_attributes = ('socket_type', )
 
     def __init__(self, *args, **kwargs):
+
         super(Socket, self).__init__(*args, **kwargs)
         self.socket = self.get_socket(self.socket_type)
 
@@ -33,7 +34,7 @@ class Socket(RequiredAttributesMixin):
 class BoundSocket(Socket):
 
     def __init__(self, *args, **kwargs):
-        self.required_attributes.append('port')
+        self.required_attributes = self.required_attributes + ('port', )
 
         super(BoundSocket, self).__init__(*args, **kwargs)
 
