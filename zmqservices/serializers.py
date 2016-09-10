@@ -2,6 +2,7 @@ import base64
 import json
 import pickle
 
+
 class DataSerializer(object):
     data_type = None
 

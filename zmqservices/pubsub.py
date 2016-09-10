@@ -70,13 +70,13 @@ class MessageForwarder(Subscriber):
         super(MessageForwarder, self).__init__(*args, **kwargs)
         self.publisher = publisher
 
-    def read(self, *args, **kwargs):
+    def receive(self, *args, **kwargs):
         """Returns a single message from the publishers
 
         Returns:
             Message: deserialized message
         """
-        message = super(MessageForwarder, self).read(*args, **kwargs)
+        message = super(MessageForwarder, self).receive(*args, **kwargs)
         self.forward(message)
         return message
 
