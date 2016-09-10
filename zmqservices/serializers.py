@@ -1,6 +1,6 @@
 import base64
 import json
-
+import pickle
 
 class DataSerializer(object):
     data_type = None
@@ -38,6 +38,18 @@ class JSON(DataSerializer):
     @classmethod
     def deserialize(cls, data):
         return json.loads(data)
+
+
+class Pickle(DataSerializer):
+    data_type = 'pickle'
+
+    @classmethod
+    def serialize(cls, data):
+        return pickle.dumps(data)
+
+    @classmethod
+    def deserialize(cls, data):
+        return pickle.loads(data)
 
 
 class FilePath(JSON):

@@ -145,6 +145,10 @@ class JSON(Message):
     serializer = serializers.JSON
 
 
+class Pickle(Message):
+    serializer = serializers.Pickle
+
+
 class FilePath(FileMixin, JSON):
     serializer = serializers.FilePath
 
