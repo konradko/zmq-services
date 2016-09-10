@@ -15,6 +15,10 @@ class MultiprocessingRotatingFileHandler(RotatingFileHandler):
         process.daemon = True
         process.start()
 
+        super(MultiprocessingRotatingFileHandler, self).__init__(
+            *args, **kwargs
+        )
+
     def async_log_writer(self):
         while True:
             record = pickle.loads(self.queue.get())
