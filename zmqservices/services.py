@@ -112,7 +112,7 @@ class JsonrpcServerResource(ServerResource):
 
         if method in self.endpoints:
             # validate params
-            if not self.endpoints[method](**params):
+            if not self.endpoints[method](params):
                 error = 'Invalid params'
         else:
             error = 'Invalid method'
