@@ -1,4 +1,27 @@
+from logging.handlers import RotatingFileHandler
+import multiprocessing
+import pickle
+
 import zmq
+
+
+class MultiprocessingRotatingFileHandler(RotatingFileHandler):
+    def __init__(self, *args, **kwargs):
+        self.queue = multiprocessing.Queue()
+
+        process = multiprocessing.Process(
+            target=self.async_log_writer,
+        )
+        process.daemon = True
+        process.start()
+
+    def async_log_writer(self):
+        while True:
+            record = pickle.loads(self.queue.get())
+            super(MultiprocessingRotatingFileHandler, self).emit(record)
+
+    def emit(self, record):
+        self.queue.put_nowait(pickle.dumps(record))
 
 
 class RequiredAttributesMixin(object):
