@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='zmqservices',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/konradko/zmq-services',
     packages=find_packages(),
     long_description=open('README.md').read(),

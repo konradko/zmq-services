@@ -137,8 +137,8 @@ class Base64(FileMixin, Message):
             self.uuid, self.file_path
         ))
 
-        with open(self.file_path, 'w') as destination:
-            destination.write(bytearray(self.data))
+        with open(self.file_path, 'wb') as destination:
+            destination.write(self.data)
 
         logger.debug("Message '{}' data saved".format(self.uuid))
 

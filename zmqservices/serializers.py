@@ -66,4 +66,4 @@ class Base64(DataSerializer):
 
     @classmethod
     def deserialize(cls, data):
-        return base64.b64decode(data)
+        return base64.decodestring(data)
