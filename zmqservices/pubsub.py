@@ -7,6 +7,7 @@ from zmqservices.utils import Socket, BoundSocket, LastMessageMixin
 class Publisher(BoundSocket):
     """ZMQ publisher"""
     socket_type = zmq.PUB
+    port = None
 
     def send(self, message):
         """Publish topic data

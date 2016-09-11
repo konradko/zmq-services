@@ -40,6 +40,8 @@ class PublisherService(Service):
     resource = PublisherResource
     publisher = pubsub.Publisher
     subscriber = pubsub.Subscriber
+    address = None
+    port = None
 
     def __init__(self, *args, **kwargs):
         self.required_attributes = self.required_attributes + (
@@ -55,8 +57,8 @@ class PublisherService(Service):
         )
 
     @classmethod
-    def get_publisher(cls):
-        return cls.publisher(port=cls.port)
+    def get_publisher(cls, publisher_port=None):
+        return cls.publisher(port=publisher_port or cls.port)
 
     def run_resource(self):
         resource_instance = self.resource(publisher=self.get_publisher())
@@ -83,6 +85,8 @@ class ServerService(Service):
     resource = ServerResource
     server = clientserver.Server
     client = clientserver.Client
+    address = None
+    port = None
 
     def __init__(self, *args, **kwargs):
         self.required_attributes = self.required_attributes + (
@@ -97,8 +101,8 @@ class ServerService(Service):
         )
 
     @classmethod
-    def get_server(cls):
-        return cls.server(port=cls.port)
+    def get_server(cls, server_port=None):
+        return cls.server(port=server_port or cls.port)
 
     def run_resource(self):
         resource_instance = self.resource(server=self.get_server())
