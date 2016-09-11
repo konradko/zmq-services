@@ -1,32 +1,65 @@
-from logging.handlers import RotatingFileHandler
 import multiprocessing
-import pickle
+import logging
+from logging.handlers import RotatingFileHandler
+import threading
+import traceback
+import sys
 
 import zmq
 
 
-class MultiprocessingRotatingFileHandler(RotatingFileHandler):
+class MultiprocessingRotatingFileHandler(logging.Handler):
     def __init__(self, *args, **kwargs):
-        super(MultiprocessingRotatingFileHandler, self).__init__(
-            *args, **kwargs
-        )
+        logging.Handler.__init__(self)
 
-        # TODO: add zmq based queue service and replace multiprocessing one
+        self._handler = RotatingFileHandler(*args, **kwargs)
         self.queue = multiprocessing.Queue()
 
-        process = multiprocessing.Process(
-            target=self.async_log_writer,
-        )
-        process.daemon = True
-        process.start()
+        t = threading.Thread(target=self.receive)
+        t.daemon = True
+        t.start()
 
-    def async_log_writer(self):
+    def setFormatter(self, fmt):
+        logging.Handler.setFormatter(self, fmt)
+        self._handler.setFormatter(fmt)
+
+    def receive(self):
         while True:
-            record = pickle.loads(self.queue.get())
-            super(MultiprocessingRotatingFileHandler, self).emit(record)
+            try:
+                record = self.queue.get()
+                self._handler.emit(record)
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except EOFError:
+                break
+            except:
+                traceback.print_exc(file=sys.stderr)
+
+    def send(self, s):
+        self.queue.put_nowait(s)
+
+    def _format_record(self, record):
+        if record.args:
+            record.msg = record.msg % record.args
+            record.args = None
+        if record.exc_info:
+            self.format(record)
+            record.exc_info = None
+
+        return record
 
     def emit(self, record):
-        self.queue.put_nowait(pickle.dumps(record))
+        try:
+            s = self._format_record(record)
+            self.send(s)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
+
+    def close(self):
+        self._handler.close()
+        logging.Handler.close(self)
 
 
 class RequiredAttributesMixin(object):

@@ -1,8 +1,11 @@
+import mock
+
 from zmqservices import services, messages
 
 
 class TestService(object):
     service = services.Service(name='test', resource=services.Resource)
+    service.run_resource = mock.Mock()
 
     def test_start(self):
         self.service.start()
