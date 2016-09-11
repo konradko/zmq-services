@@ -13,6 +13,9 @@ class Resource(object):
 class Service(RequiredAttributesMixin):
     required_attributes = ('name', 'resource')
     running = False
+    # daemonic process is not allowed to create child processes and when main
+    # process exit it attempts to terminate all of its daemonic child processes
+    daemon = False
 
     def start(self):
         if self.running:
@@ -21,6 +24,10 @@ class Service(RequiredAttributesMixin):
 
         logger.info("Starting {} service...".format(self.name))
         self.process = Process(target=self.run_resource)
+
+        if self.daemon:
+            self.process.daemon = True
+
         self.process.start()
         self.running = True
 
