@@ -7,6 +7,11 @@ import zmq
 
 class MultiprocessingRotatingFileHandler(RotatingFileHandler):
     def __init__(self, *args, **kwargs):
+        super(MultiprocessingRotatingFileHandler, self).__init__(
+            *args, **kwargs
+        )
+
+        # TODO: add zmq based queue service and replace multiprocessing one
         self.queue = multiprocessing.Queue()
 
         process = multiprocessing.Process(
@@ -14,10 +19,6 @@ class MultiprocessingRotatingFileHandler(RotatingFileHandler):
         )
         process.daemon = True
         process.start()
-
-        super(MultiprocessingRotatingFileHandler, self).__init__(
-            *args, **kwargs
-        )
 
     def async_log_writer(self):
         while True:
