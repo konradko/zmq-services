@@ -1,13 +1,12 @@
+import os
 import tempfile
-
-import zmq
 
 import logging.config
 from multiprocessing import Process
 
 
 class TestMultiprocessingRotatingFileHandler(object):
-    temp_log_file = tempfile.TemporaryFile().name
+    log_file_descriptor, log_file_path = tempfile.mkstemp(suffix='.log')
 
     def test_log(self):
         logging.config.dictConfig({
@@ -17,7 +16,7 @@ class TestMultiprocessingRotatingFileHandler(object):
                     'class': (
                         'zmqservices.utils.MultiprocessingRotatingFileHandler'
                     ),
-                    'filename': self.temp_log_file,
+                    'filename': self.log_file_path,
                 },
             },
             'root': {
@@ -43,11 +42,17 @@ class TestMultiprocessingRotatingFileHandler(object):
         for process in processes:
             process.join()
 
-        with open(self.temp_log_file, 'r') as log_file:
+        with open(self.log_file_path, 'r') as log_file:
             log = log_file.read()
 
             assert main_process_text in log
             assert all(child_text in log for child_text in children_text)
 
+        self.cleanup_temp_file()
+
     def log(self, text):
         self.logger.info(text)
+
+    def cleanup_temp_file(self):
+        os.close(self.log_file_descriptor)
+        os.unlink(self.log_file_path)

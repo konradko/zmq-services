@@ -24,7 +24,7 @@ xenon:
 	@echo "Running xenon over codebase"
 	xenon --max-absolute B --max-modules B --max-average A zmqservices/
 
-test: static_analysis
+test: clean static_analysis
 	py.test -rw tests --timeout=1 --cov=zmqservices $(pytest_args)
 
 .PHONY: build clean test_requirements test static_analysis pep8 xenon update_requirements upgrade_requirements
