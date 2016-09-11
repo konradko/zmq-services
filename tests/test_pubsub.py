@@ -1,5 +1,7 @@
 from zmqservices import pubsub, messages
 
+from tests.utils import mock_zmq
+
 
 class TestPublisher(object):
 
@@ -10,72 +12,65 @@ class TestPublisher(object):
 
 
 class TestSubscriber(object):
-    topics = ('test', )
-    publisher = pubsub.Publisher(port='tcp://*:48641')
-    publisher_address = 'tcp://localhost:48641'
 
     def test_receive(self):
-        subscriber = pubsub.Subscriber(
-            publishers=(self.publisher_address, ),
-            topics=self.topics
-        )
+        with mock_zmq() as zmq_mock:
+            topics = ('test', )
+            publisher_address = 'tcp://localhost:48641'
 
-        self.publisher.send(
-            message=messages.JSON(topic='test', data='test')
-        )
+            subscriber = pubsub.Subscriber(
+                publishers=(publisher_address, ),
+                topics=topics
+            )
 
-        subscriber.receive()
+            message = messages.JSON(topic=topics[0], data='test')
+            zmq_mock.recv.return_value = message.serialize()
+
+            subscriber.receive()
 
 
 class TestMessageForwarder(object):
-    topics = ('test', )
-    publisher_to_forward = pubsub.Publisher(port='tcp://*:48642')
-    publisher_to_forward_address = 'tcp://localhost:48642'
-    forwarder = pubsub.Publisher(port='tcp://*:48643')
 
     def test_receive(self):
-        subscriber = pubsub.MessageForwarder(
-            publisher=self.forwarder,
-            publishers=(self.publisher_to_forward_address, ),
-            topics=self.topics
-        )
+        with mock_zmq() as zmq_mock:
+            topics = ('test', )
+            publisher_to_forward_address = 'tcp://localhost:48642'
+            forwarder = pubsub.Publisher(port='tcp://*:48643')
 
-        self.publisher_to_forward.send(
-            message=messages.JSON(topic='test', data='test')
-        )
+            subscriber = pubsub.MessageForwarder(
+                publisher=forwarder,
+                publishers=(publisher_to_forward_address, ),
+                topics=topics
+            )
 
-        subscriber.receive()
+            message = messages.JSON(topic=topics[0], data='test')
+            zmq_mock.recv.return_value = message.serialize()
+
+            subscriber.receive()
 
 
 class TestLastMessagePublisher(object):
-    publisher = pubsub.LastMessagePublisher(port='tcp://*:48644')
 
     def test_send(self):
-        self.publisher.send(message=messages.JSON(data='test'))
+        pubsub.LastMessagePublisher(port='tcp://*:48644').send(
+            message=messages.JSON(data='test')
+        )
 
 
 class TestLastMessageSubscriber(object):
-    topics = ('test', )
-    publisher = pubsub.Publisher(port='tcp://*:48645')
-    publisher_address = 'tcp://localhost:48645'
 
     def test_receive(self):
-        subscriber = pubsub.LastMessageSubscriber(
-            publishers=(self.publisher_address, ),
-            topics=self.topics
-        )
+        with mock_zmq() as zmq_mock:
+            topics = ('test', )
+            publisher_address = 'tcp://localhost:48645'
 
-        message = messages.JSON(topic='test', data='test')
-        self.publisher.send(
-            message=message
-        )
+            subscriber = pubsub.LastMessageSubscriber(
+                publishers=(publisher_address, ),
+                topics=topics
+            )
 
-        message.data = 'test2'
+            message = messages.JSON(topic=topics[0], data='test')
+            zmq_mock.recv.return_value = message.serialize()
+            received = subscriber.receive()
 
-        self.publisher.send(
-            message=message
-        )
-
-        received = subscriber.receive()
-
-        assert received.data == message.data
+            assert received.data == message.data

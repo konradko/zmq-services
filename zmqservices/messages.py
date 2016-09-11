@@ -71,9 +71,11 @@ class Message(object):
         """
         logger.debug("Deserializing message...")
         try:
-            topic, uuid, timestamp, data_type, data = raw_message.split()
+            topic, uuid, timestamp, data_type, data = raw_message.split(
+                self.delimiter
+            )
 
-            if data_type != self.data_type:
+            if data_type != self.serializer.data_type:
                 raise InvalidMessageError(
                     u"Invalid data_type '{}', "
                     "expected: '{}'".format(
@@ -81,7 +83,7 @@ class Message(object):
                     )
                 )
 
-            data = self.serializer.deserialize_data(data)
+            data = self.serializer.deserialize(data)
         except Exception as e:
             raise InvalidMessageError(u"Invalid message: {}".format(e))
         else:
@@ -135,7 +137,7 @@ class Base64(FileMixin, Message):
             self.uuid, self.file_path
         ))
 
-        with open(self.file_path) as destination:
+        with open(self.file_path, 'w') as destination:
             destination.write(bytearray(self.data))
 
         logger.debug("Message '{}' data saved".format(self.uuid))
@@ -162,6 +164,7 @@ MESSAGE_FOR_DATA_TYPE = {
     Base64.serializer.data_type: Base64,
     JSON.serializer.data_type: JSON,
     FilePath.serializer.data_type: FilePath,
+    Pickle.serializer.data_type: Pickle,
 }
 
 
